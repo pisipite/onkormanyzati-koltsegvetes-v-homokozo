@@ -1,4 +1,4 @@
-import ExcelJS from 'exceljs';
+import type { Workbook } from 'exceljs';
 import { parseFunctionalTreeDescriptor, parseSheetName } from '../../../scripts/prepare-data-lib';
 import type { BudgetNode } from '../../../src/utils/types';
 
@@ -9,7 +9,7 @@ export default createGlobalState(async () => {
 
 	// xlsx
 
-	const workbook = shallowRef<ExcelJS.Workbook | null>(null);
+	const workbook = shallowRef<Workbook | null>(null);
 	const workbookPending = ref(false);
 
 	async function loadBudgetXlsxFromServer() {
@@ -19,6 +19,7 @@ export default createGlobalState(async () => {
 			const buffer = await $fetch<ArrayBuffer>('/input/budget.xlsx', {
 				responseType: 'arrayBuffer',
 			});
+			const { default: ExcelJS } = await import('exceljs');
 			const wb = new ExcelJS.Workbook();
 			await wb.xlsx.load(buffer);
 			workbook.value = wb;
