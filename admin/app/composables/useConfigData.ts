@@ -1,4 +1,9 @@
 import type { Cell, CellValue, Workbook, Worksheet } from 'exceljs';
+import {
+	flattenConfig,
+	parseConfigWorkbook,
+	readConfigPath,
+} from '../../../scripts/prepare-config-lib';
 
 function isFormulaValue(value: CellValue): value is Exclude<CellValue, null | undefined> & {
 	formula: string;
@@ -118,6 +123,13 @@ export default createGlobalState(async () => {
 	const isConfigModified = ref(false);
 	const revision = ref(0);
 
+	const parsedConfig = computed(() => {
+		trackRevision(revision);
+		return workbook.value ? parseConfigWorkbook(workbook.value) : {};
+	});
+
+	const flattenedConfig = computed(() => flattenConfig(parsedConfig.value));
+
 	async function loadConfigXlsxFromServer() {
 		if (pending.value) return;
 		pending.value = true;
@@ -173,12 +185,8 @@ export default createGlobalState(async () => {
 	}
 
 	function readConfigValue(key: string) {
-		trackRevision(revision);
-		const sheet = workbook.value?.getWorksheet('config');
-		if (!sheet) return '';
-		const row = findConfigRow(sheet, key);
-		if (!row) return '';
-		return cellValueToText(row.getCell(2).value);
+		const value = readConfigPath(parsedConfig.value, key);
+		return cellValueToText(value as CellValue);
 	}
 
 	function writeConfigValue(key: string, value: string) {
@@ -193,15 +201,7 @@ export default createGlobalState(async () => {
 	}
 
 	function listConfigKeys(prefix: string) {
-		trackRevision(revision);
-		const sheet = workbook.value?.getWorksheet('config');
-		if (!sheet) return [];
-		const keys: string[] = [];
-		sheet.eachRow({ includeEmpty: false }, (row) => {
-			const key = cellValueToText(row.getCell(1).value).trim();
-			if (key.startsWith(prefix)) keys.push(key);
-		});
-		return keys;
+		return Object.keys(flattenedConfig.value).filter((key) => key.startsWith(prefix));
 	}
 
 	function readSheetRows(sheetName: string) {

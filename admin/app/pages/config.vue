@@ -112,9 +112,6 @@ function updateCell(row: number, column: number, value: string | number) {
 				<ConfigFeedbackForm />
 			</div>
 		</PageSection>
-		<div class="px-4 lg:px-8">
-			<ConfigMilestonesEditor />
-		</div>
 		<PageSection>
 			<p>
 				Az alábbi táblázatos nézetben a teljes <code>config.xlsx</code> tartalma látható. A

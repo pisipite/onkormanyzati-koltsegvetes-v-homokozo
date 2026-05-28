@@ -1,9 +1,15 @@
 <script setup lang="ts">
-import { Trash, Upload } from 'lucide-vue-next';
+import { Download, Save, Trash, Undo, Upload } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 
 const loading = useLoading();
 const serverUrl = useServerUrl();
+const {
+	downloadConfigXlsxFromClient,
+	isConfigModified,
+	loadConfigXlsxFromServer,
+	uploadConfigXlsxToServer,
+} = await useConfigData();
 
 const ms = ref<string[]>();
 async function updateMs() {
@@ -30,6 +36,21 @@ async function delMs(f: string) {
 	}
 }
 
+async function saveConfig() {
+	const success = await uploadConfigXlsxToServer();
+	if (!success) {
+		toast.error('Nem sikerült elmenteni a fejlesztéskártyákat.');
+		return;
+	}
+	await loadConfigXlsxFromServer();
+	toast.success('Fejlesztéskártyák sikeresen elmentve!');
+}
+
+async function revertConfigChanges() {
+	if (!confirm('Biztosan el akarod vetni a fejlesztéskártyák módosításait?')) return;
+	await loadConfigXlsxFromServer();
+}
+
 onMounted(async () => {
 	loading.value = true;
 	await updateMs();
@@ -39,6 +60,33 @@ onMounted(async () => {
 
 <template>
 	<PageFrame title="Fejlesztéskártyák képei">
+		<PageSection v-if="isConfigModified">
+			<p class="text-destructive *:text-destructive">
+				<strong>A fejlesztéskártyák módosultak, de még nincsenek elmentve</strong>
+				a szerveren levő <code>config.xlsx</code> fájlba.
+			</p>
+			<template #actions>
+				<Button
+					variant="secondary"
+					@click="downloadConfigXlsxFromClient"
+				>
+					<Download />
+					Letöltés
+				</Button>
+				<Button @click="saveConfig">
+					<Save />
+					Mentés
+				</Button>
+				<Button
+					class="ml-auto"
+					variant="destructive"
+					@click="revertConfigChanges"
+				>
+					<Undo />
+					Elvetés
+				</Button>
+			</template>
+		</PageSection>
 		<PageSection class="border-0">
 			<p>
 				A feltöltött fájlok eredeti neve megmarad, a szerveren levő azonos nevű fájl felül
@@ -66,11 +114,15 @@ onMounted(async () => {
 							type="file"
 							multiple
 							@change="uploadMs"
-						/>
+						>
 					</label>
 				</Button>
 			</template>
 		</PageSection>
+
+		<div class="px-4 lg:px-8">
+			<ConfigMilestonesEditor />
+		</div>
 
 		<div class="container mx-auto px-16">
 			<ItemGroup class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
