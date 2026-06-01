@@ -61,7 +61,7 @@ onMounted(async () => {
 <template>
 	<PageFrame title="Fejlesztéskártyák képei">
 		<PageSection v-if="isConfigModified">
-			<p class="text-destructive *:text-destructive">
+			<p class="text-modification *:text-modification">
 				<strong>A fejlesztéskártyák módosultak, de még nincsenek elmentve</strong>
 				a szerveren levő <code>config.xlsx</code> fájlba.
 			</p>
@@ -79,7 +79,7 @@ onMounted(async () => {
 				</Button>
 				<Button
 					class="ml-auto"
-					variant="destructive"
+					variant="modification"
 					@click="revertConfigChanges"
 				>
 					<Undo />
@@ -89,10 +89,14 @@ onMounted(async () => {
 		</PageSection>
 		<PageSection class="border-0">
 			<p>
+				A konfigurációs fájlban (link a konfig menüpontra) meghatározott
+				fejlesztéskártyákhoz kapcsolódó képeket ezen az oldalon lehet feltölteni. Az
+				excelben pontos fájlnevet kell megadni.
+			</p>
+			<p>
 				A feltöltött fájlok eredeti neve megmarad, a szerveren levő azonos nevű fájl felül
 				lesz írva. Egyszerre több fájl is feltölthető. Ajánlott ékezet és szóköz mentes
-				fájlnevekkel dolgozni. A konfigban a fájlnevet pontosan kell megadni, mappanevet nem
-				kell eléírni.
+				fájlnevekkel dolgozni.
 			</p>
 			<p>
 				A képeket ajánlott feltöltés előtt 1200 pixel szélesre kicsinyíteni arányosan, JPG

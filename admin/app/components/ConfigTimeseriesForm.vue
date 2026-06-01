@@ -31,6 +31,7 @@ const textFields = [
 	{
 		key: 'timeseries.expenseText',
 		label: 'Kiadások idősor magyarázat',
+		markdown: true,
 		textarea: true,
 		help: 'Idősor kiadások szakasz magyarázata.',
 	},
@@ -42,6 +43,7 @@ const textFields = [
 	{
 		key: 'timeseries.incomeText',
 		label: 'Bevételek idősor magyarázat',
+		markdown: true,
 		textarea: true,
 		help: 'Idősor bevételek szakasz magyarázata.',
 	},
@@ -311,6 +313,7 @@ function addGdpYear() {
 			:key="field.key"
 			:help="field.help"
 			:label="field.label"
+			:markdown="field.markdown"
 			:model-value="getValue(field.key)"
 			:textarea="field.textarea"
 			@update:model-value="setValue(field.key, $event)"

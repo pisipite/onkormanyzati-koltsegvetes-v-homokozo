@@ -86,7 +86,7 @@ function writeEconValue(id: string | number, name: string, value: number): numbe
 
 const inputValue = ref(readEconValue(node.id || '', node.name || ''));
 const bus = useCellChangedEvent();
-const { getPreviousValue, isModified, isNodeTreeModified, markModified, markUnmodified } =
+const { getPreviousValue, isModified, isNewRow, isNodeTreeModified, markModified, markUnmodified } =
 	useModifications();
 const { ignoreUpdates } = watchIgnorable(
 	inputValue,
@@ -115,6 +115,11 @@ function handleDelete() {
 	const row = findEconRow(node.id || '', node.name || '');
 	if (row) {
 		sheet.value.spliceRows(row.number, 1);
+		if (isNewRow(sheet?.value?.name || '', String(node.id || ''))) {
+			markUnmodified(sheet?.value?.name || '', String(node.id || ''), true);
+		} else {
+			markModified(sheet?.value?.name || '', String(node.id || ''), inputValue.value);
+		}
 		bus.emit();
 	}
 }
@@ -167,7 +172,7 @@ function undo() {
 								class="relative size-4 overflow-hidden"
 							>
 								<Dot
-									class="text-destructive absolute top-1/2 left-1/2 size-8 -translate-x-1/2 -translate-y-1/2"
+									class="text-modification absolute top-1/2 left-1/2 size-8 -translate-x-1/2 -translate-y-1/2"
 								/>
 							</div>
 						</div>
@@ -179,11 +184,13 @@ function undo() {
 							<Button
 								v-if="
 									isEditable &&
-									isModified(sheet?.name || '', String(node.id || ''))
+									isModified(sheet?.name || '', String(node.id || '')) &&
+									getPreviousValue(sheet?.name || '', String(node.id || '')) !==
+										node.value
 								"
 								class="cursor-pointer"
 								size="sm"
-								variant="destructive"
+								variant="modification"
 								@click="undo"
 							>
 								<UndoDot />

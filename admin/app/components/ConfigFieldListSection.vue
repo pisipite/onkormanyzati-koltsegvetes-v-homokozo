@@ -4,6 +4,7 @@ export type ConfigFieldDefinition = {
 	inputType?: string;
 	key: string;
 	label: string;
+	markdown?: boolean;
 	placeholder?: string;
 	textarea?: boolean;
 };
@@ -37,6 +38,7 @@ function setValue(key: string, value: string) {
 			:help="field.help"
 			:input-type="field.inputType"
 			:label="field.label"
+			:markdown="field.markdown"
 			:model-value="getValue(field.key)"
 			:placeholder="field.placeholder"
 			:textarea="field.textarea"

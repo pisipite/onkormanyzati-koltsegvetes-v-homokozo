@@ -3,7 +3,8 @@ import { Cog, Download, Save, Undo, Upload } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 
 const loading = useLoading();
-const serverUrl = useServerUrl();
+const { loadFunctionsTsvFromServer } = await useBudgetData();
+const { reload: reloadCityName } = useCityName();
 const {
 	downloadConfigXlsxFromClient,
 	isConfigModified,
@@ -29,6 +30,8 @@ async function newConfig() {
 	try {
 		await $fetch('/api/newConfig', { method: 'POST' });
 		await loadConfigXlsxFromServer();
+		await loadFunctionsTsvFromServer();
+		await reloadCityName();
 		toast.success('Új konfig sikeresen generálva!');
 	} catch (e: unknown) {
 		console.error(e);
@@ -41,6 +44,8 @@ async function newConfig() {
 async function uploadConfig(e: Event) {
 	await upload('/api/config', 'config', e.target as HTMLInputElement);
 	await loadConfigXlsxFromServer();
+	await loadFunctionsTsvFromServer();
+	await reloadCityName();
 }
 
 async function saveConfig() {
@@ -50,6 +55,8 @@ async function saveConfig() {
 		return;
 	}
 	await loadConfigXlsxFromServer();
+	await loadFunctionsTsvFromServer();
+	await reloadCityName();
 	toast.success('Konfiguráció sikeresen elmentve!');
 }
 
@@ -66,7 +73,7 @@ function updateCell(row: number, column: number, value: string | number) {
 <template>
 	<PageFrame title="Konfiguráció">
 		<PageSection v-if="isConfigModified">
-			<p class="text-destructive *:text-destructive">
+			<p class="text-modification *:text-modification">
 				<strong>A konfiguráció módosult, de még nincs elmentve</strong>
 				a szerveren levő <code>config.xlsx</code> fájlba. A módosítások elvesznek a
 				böngészőlap bezárásakor, újratöltésekor vagy új konfiguráció feltöltésekor.
@@ -85,7 +92,7 @@ function updateCell(row: number, column: number, value: string | number) {
 				</Button>
 				<Button
 					class="ml-auto"
-					variant="destructive"
+					variant="modification"
 					@click="revertConfigChanges"
 				>
 					<Undo />
@@ -99,7 +106,27 @@ function updateCell(row: number, column: number, value: string | number) {
 				módosítások először csak a böngészőben élnek, a szerveren levő fájl a Mentés gombbal
 				frissül.
 			</p>
-			<div class="not-prose flex flex-col gap-4">
+			<div class="not-prose mt-4 flex flex-wrap gap-3">
+				<Button
+					variant="secondary"
+					@click="downloadConfigXlsxFromClient"
+				>
+					<Download />
+					Letöltés
+				</Button>
+				<Button as-child>
+					<label>
+						<Upload />
+						Feltöltés
+						<input
+							style="display: none"
+							type="file"
+							@change="uploadConfig"
+						>
+					</label>
+				</Button>
+			</div>
+			<div class="not-prose mt-4 flex flex-col gap-4">
 				<ConfigModulesForm />
 				<ConfigBasicsForm />
 				<ConfigSearchForm />
@@ -186,23 +213,25 @@ function updateCell(row: number, column: number, value: string | number) {
 		</PageSection>
 		<PageSection>
 			<p>
-				Feltöltéskor a fájl neve mindegy, a szerveren levő
-				<code>config.xlsx</code> fájl lesz felülírva vele. Excel 2007-O365
-				(<code>*.xlsx</code>) fájlt kell feltölteni, melynek szerkezete követi a
-				dokumentációban írtakat.
+				A honlap konfigurációs beállításait egy sablon alapján Excel fájlon keresztül lehet
+				szerkeszteni. A sablon paramétereihez annak egyes munkalapjai tartalmaznak
+				segítséget, az Excel fájl szerkezetéről a
+				<a
+					href="https://github.com/k-monitor/onkormanyzati-koltsegvetes-v2#inputconfigxlsx"
+					target="_blank"
+					>dokumentációban</a
+				>
+				található részletes információ. Feltöltéskor a fájl neve mindegy, a meglevő
+				<code>config.xlsx</code> fájl lesz felülírva vele. Excel 2007-O365 (*.xlsx) fájlt
+				kell feltölteni.
 			</p>
 			<template #actions>
 				<Button
-					as-child
 					variant="secondary"
+					@click="downloadConfigXlsxFromClient"
 				>
-					<a
-						download
-						:href="serverUrl('/input/config.xlsx')"
-					>
-						<Download />
-						Letöltés
-					</a>
+					<Download />
+					Letöltés
 				</Button>
 				<Button as-child>
 					<label>

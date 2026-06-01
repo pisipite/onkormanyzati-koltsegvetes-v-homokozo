@@ -6,6 +6,7 @@ const fields: ConfigFieldDefinition[] = [
 	{
 		key: 'vis.incomeText',
 		label: 'Bevételek magyarázó szöveg',
+		markdown: true,
 		textarea: true,
 		help: 'Bevétel ábra alatti szöveg (opcionális).',
 	},
@@ -13,6 +14,7 @@ const fields: ConfigFieldDefinition[] = [
 	{
 		key: 'vis.expenseText',
 		label: 'Kiadások magyarázó szöveg',
+		markdown: true,
 		textarea: true,
 		help: 'Kiadás ábra alatti szöveg (opcionális).',
 	},

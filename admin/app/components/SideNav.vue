@@ -22,7 +22,7 @@ const yearItems = computed(() =>
 			href: `/budget/${slugifyYear(y)}/`,
 			text: y,
 			icon: CalendarDays,
-			warning: isYearModified(y),
+			modified: isYearModified(y),
 		})),
 );
 
@@ -40,9 +40,19 @@ const links = computed(() => {
 				},
 				...yearItems.value,
 			],
-			warning: isBudgetModified.value,
+			modified: isBudgetModified.value,
 		},
-		{ href: '/config/', text: 'Konfiguráció', icon: Settings },
+		{
+			href: '/config/',
+			text: 'Konfiguráció',
+			icon: Settings,
+			items: [
+				{
+					href: '/config/codes/',
+					text: 'Rovatkódok követése',
+				},
+			],
+		},
 		{ href: '/logos/', text: 'Logók', icon: Image },
 		{ href: '/milestones/', text: 'Fejlesztéskártyák képei', icon: Image },
 		{ href: '/site/', text: 'Weboldal', icon: Globe },
@@ -54,6 +64,23 @@ const mounted = ref(false);
 onMounted(async () => {
 	mounted.value = true;
 });
+
+const publicUrl = usePublicUrl();
+const domain = computed(() => {
+	const value = publicUrl.value.trim();
+	if (!value || value.startsWith('/')) return '';
+	try {
+		return new URL(value).hostname;
+	} catch {
+		try {
+			return new URL(`https://${value}`).hostname;
+		} catch {
+			return '';
+		}
+	}
+});
+
+const { cityName } = useCityName();
 </script>
 
 <template>
@@ -61,9 +88,18 @@ onMounted(async () => {
 		<SidebarHeader>
 			<SidebarMenu>
 				<SidebarMenuItem>
-					<SidebarMenuButton size="lg">
+					<SidebarMenuButton
+						class="h-auto"
+						size="lg"
+					>
 						<div class="grid flex-1 text-left text-lg leading-tight">
 							<span class="truncate font-semibold">KÖKÖ Admin</span>
+							<span class="truncate text-2xl font-bold">{{ cityName }}</span>
+							<span
+								v-if="domain"
+								class="text-muted-foreground text-sm"
+								>{{ domain }}</span
+							>
 						</div>
 					</SidebarMenuButton>
 				</SidebarMenuItem>
@@ -82,7 +118,10 @@ onMounted(async () => {
 						>
 							<SidebarMenuButton
 								as-child
-								:is-active="$route.path === link.href"
+								:is-active="
+									$route.path === link.href ||
+									Boolean(link.items?.some((item) => item.href === $route.path))
+								"
 							>
 								<NuxtLink :to="link.href">
 									<component
@@ -91,8 +130,8 @@ onMounted(async () => {
 									/>
 									{{ link.text }}
 									<CircleAlert
-										v-if="link.warning"
-										class="text-destructive ml-auto"
+										v-if="link.modified"
+										class="text-modification ml-auto"
 									/>
 								</NuxtLink>
 							</SidebarMenuButton>
@@ -111,8 +150,8 @@ onMounted(async () => {
 												v-if="item.icon"
 											/>{{ item.text }}
 											<Dot
-												v-if="item.warning"
-												class="text-destructive! ml-auto size-8!"
+												v-if="item.modified"
+												class="text-modification! ml-auto size-8!"
 											/>
 										</NuxtLink>
 									</SidebarMenuSubButton>

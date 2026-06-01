@@ -9,6 +9,7 @@ type TextField = {
 	help?: string;
 	key: string;
 	label: string;
+	markdown?: boolean;
 	textarea?: boolean;
 };
 
@@ -17,6 +18,7 @@ const fieldsBeforeYearlyLeftBlocks: TextField[] = [
 	{
 		key: 'welcome.leftBlock',
 		label: 'Köszöntő bal hasáb',
+		markdown: true,
 		textarea: true,
 		help: 'Köszöntő szakasz bal oldali hasábjának szövege. Markdown jelölések használhatóak (pl. formázás, linkek).',
 	},
@@ -26,6 +28,7 @@ const fieldsBeforeYearlyNames: TextField[] = [
 	{
 		key: 'welcome.rightBlock',
 		label: 'Köszöntő jobb hasáb',
+		markdown: true,
 		textarea: true,
 		help: 'Köszöntő szakasz jobb oldali hasábjának szövege. Markdown jelölések használhatóak (pl. formázás, linkek).',
 	},
@@ -133,6 +136,7 @@ function addNameYear() {
 			:key="field.key"
 			:help="field.help"
 			:label="field.label"
+			:markdown="field.markdown"
 			:model-value="getValue(field.key)"
 			:textarea="field.textarea"
 			@update:model-value="setValue(field.key, $event)"
@@ -213,6 +217,7 @@ function addNameYear() {
 			:key="field.key"
 			:help="field.help"
 			:label="field.label"
+			:markdown="field.markdown"
 			:model-value="getValue(field.key)"
 			:textarea="field.textarea"
 			@update:model-value="setValue(field.key, $event)"
@@ -293,6 +298,7 @@ function addNameYear() {
 			:key="field.key"
 			:help="field.help"
 			:label="field.label"
+			:markdown="field.markdown"
 			:model-value="getValue(field.key)"
 			@update:model-value="setValue(field.key, $event)"
 		/>

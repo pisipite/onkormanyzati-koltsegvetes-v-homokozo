@@ -4,8 +4,10 @@ const { years } = await useBudgetData();
 
 type TextField = {
 	help?: string;
+	inputType?: string;
 	key: string;
 	label: string;
+	markdown?: boolean;
 	textarea?: boolean;
 };
 
@@ -45,6 +47,8 @@ const textFields: TextField[] = [
 	{
 		key: 'navBar.bannerText',
 		label: 'Banner szövege',
+		markdown: true,
+		textarea: true,
 		help: 'Markdown jelölések használhatóak (pl. formázás, linkek).',
 	},
 	{
@@ -65,6 +69,7 @@ const textFields: TextField[] = [
 	{
 		key: 'moreInfo.text',
 		label: 'További infó szöveg',
+		markdown: true,
 		textarea: true,
 		help: 'További információ ablak szövege. Markdown jelölések használhatóak (pl. formázás, linkek).',
 	},
@@ -232,7 +237,9 @@ function setThemeValue(year: string, value: string) {
 			v-for="field in textFields.slice(0, 6)"
 			:key="field.key"
 			:help="field.help"
+			:input-type="field.inputType"
 			:label="field.label"
+			:markdown="field.markdown"
 			:model-value="getValue(field.key)"
 			:textarea="field.textarea"
 			@update:model-value="setValue(field.key, $event)"
@@ -246,7 +253,9 @@ function setThemeValue(year: string, value: string) {
 			v-for="field in textFields.slice(6)"
 			:key="field.key"
 			:help="field.help"
+			:input-type="field.inputType"
 			:label="field.label"
+			:markdown="field.markdown"
 			:model-value="getValue(field.key)"
 			:textarea="field.textarea"
 			@update:model-value="setValue(field.key, $event)"

@@ -145,6 +145,7 @@ export default createGlobalState(async () => {
 
 		// input data
 		emptyFuncTree: computed(() => emptyFuncTree.value),
+		loadFunctionsTsvFromServer,
 		loadBudgetXlsxFromServer,
 		workbook: computed(() => workbook.value),
 		downloadXlsxFromClient,

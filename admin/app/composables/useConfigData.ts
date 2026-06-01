@@ -61,6 +61,26 @@ function writeCellText(cell: Cell, value: string) {
 	return true;
 }
 
+function normalizeFormulaReferences(formula: string) {
+	return formula
+		.replace(/'\[\d+\]([^']+)'!/g, "'$1'!")
+		.replace(/\[\d+\]([^!']+)!/g, '$1!');
+}
+
+function normalizeWorkbookFormulas(workbook: Workbook) {
+	workbook.eachSheet((sheet) => {
+		sheet.eachRow({ includeEmpty: false }, (row) => {
+			row.eachCell({ includeEmpty: false }, (cell) => {
+				const value = cell.value;
+				if (!isFormulaValue(value)) return;
+				const formula = normalizeFormulaReferences(value.formula);
+				if (formula === value.formula) return;
+				cell.value = { ...value, formula };
+			});
+		});
+	});
+}
+
 function findUsedRange(sheet: Worksheet) {
 	let rowCount = 0;
 	let columnCount = 0;
@@ -107,6 +127,28 @@ function findHeaderColumn(sheet: Worksheet, header: string) {
 	return columnNumber;
 }
 
+function ensureHeaderColumn(sheet: Worksheet, header: string) {
+	const existingColumn = findHeaderColumn(sheet, header);
+	if (existingColumn) return existingColumn;
+	const headerRow = sheet.getRow(1);
+	const columnNumber = Math.max(headerRow.cellCount, 0) + 1;
+	headerRow.getCell(columnNumber).value = header;
+	return columnNumber;
+}
+
+function findSheetRowByHeaderValue(sheet: Worksheet, header: string, value: string) {
+	const columnNumber = findHeaderColumn(sheet, header);
+	if (!columnNumber) return undefined;
+	const { rowCount } = findUsedRange(sheet);
+	for (let rowNumber = 2; rowNumber <= rowCount; rowNumber++) {
+		const row = sheet.getRow(rowNumber);
+		if (cellValueToText(row.getCell(columnNumber).value).trim() === value) {
+			return row;
+		}
+	}
+	return undefined;
+}
+
 function trackRevision(revision: Ref<number>) {
 	return revision.value;
 }
@@ -140,6 +182,7 @@ export default createGlobalState(async () => {
 			const { default: ExcelJS } = await import('exceljs');
 			const wb = new ExcelJS.Workbook();
 			await wb.xlsx.load(buffer);
+			normalizeWorkbookFormulas(wb);
 			workbook.value = wb;
 			selectedSheetName.value = wb.worksheets[0]?.name || '';
 			isConfigModified.value = false;
@@ -230,6 +273,37 @@ export default createGlobalState(async () => {
 		return rows;
 	}
 
+	function readSheetHeaders(sheetName: string) {
+		trackRevision(revision);
+		const sheet = workbook.value?.getWorksheet(sheetName);
+		if (!sheet) return [];
+		const headers: string[] = [];
+		sheet.getRow(1).eachCell({ includeEmpty: false }, (cell) => {
+			const header = cellValueToText(cell.value).trim();
+			if (header) headers.push(header);
+		});
+		return headers;
+	}
+
+	function ensureSheet(sheetName: string, headers: string[]) {
+		if (!workbook.value) return false;
+		let sheet = workbook.value.getWorksheet(sheetName);
+		let changed = false;
+		if (!sheet) {
+			sheet = workbook.value.addWorksheet(sheetName);
+			changed = true;
+		}
+		for (const header of headers) {
+			const before = findHeaderColumn(sheet, header);
+			ensureHeaderColumn(sheet, header);
+			if (!before) changed = true;
+		}
+		if (!changed) return true;
+		isConfigModified.value = true;
+		revision.value++;
+		return true;
+	}
+
 	function addSheetRow(sheetName: string, values: Record<string, string | number | boolean>) {
 		const sheet = workbook.value?.getWorksheet(sheetName);
 		if (!sheet) return;
@@ -241,6 +315,30 @@ export default createGlobalState(async () => {
 			rowValues[colNumber] = values[header] ?? null;
 		});
 		sheet.spliceRows(rowCount + 1, 0, rowValues);
+		isConfigModified.value = true;
+		revision.value++;
+	}
+
+	function upsertSheetRow(
+		sheetName: string,
+		lookupHeader: string,
+		lookupValue: string,
+		values: Record<string, string | number | boolean>,
+	) {
+		const sheet = workbook.value?.getWorksheet(sheetName);
+		if (!sheet || !lookupValue.trim()) return;
+		const row = findSheetRowByHeaderValue(sheet, lookupHeader, lookupValue);
+		if (!row) {
+			addSheetRow(sheetName, values);
+			return;
+		}
+		let changed = false;
+		for (const [header, value] of Object.entries(values)) {
+			const columnNumber = findHeaderColumn(sheet, header);
+			if (!columnNumber) continue;
+			changed = writeCellText(row.getCell(columnNumber), String(value)) || changed;
+		}
+		if (!changed) return;
 		isConfigModified.value = true;
 		revision.value++;
 	}
@@ -284,6 +382,14 @@ export default createGlobalState(async () => {
 		revision.value++;
 	}
 
+	function deleteSheetRowByHeaderValue(sheetName: string, header: string, value: string) {
+		const sheet = workbook.value?.getWorksheet(sheetName);
+		if (!sheet) return;
+		const row = findSheetRowByHeaderValue(sheet, header, value);
+		if (!row) return;
+		deleteSheetRow(sheetName, row.number);
+	}
+
 	function addConfigValue(
 		key: string,
 		value = '',
@@ -314,6 +420,7 @@ export default createGlobalState(async () => {
 
 	async function downloadConfigXlsxFromClient() {
 		if (!workbook.value) return;
+		normalizeWorkbookFormulas(workbook.value);
 		const buffer = await workbook.value.xlsx.writeBuffer();
 		const blob = new Blob([buffer], {
 			type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -331,6 +438,7 @@ export default createGlobalState(async () => {
 	async function uploadConfigXlsxToServer() {
 		if (pending.value || !workbook.value) return false;
 		pending.value = true;
+		normalizeWorkbookFormulas(workbook.value);
 		const buffer = await workbook.value.xlsx.writeBuffer();
 		const blob = new Blob([buffer], {
 			type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -379,13 +487,16 @@ export default createGlobalState(async () => {
 		addSheetRow,
 		deleteConfigValue,
 		deleteSheetRow,
+		deleteSheetRowByHeaderValue,
 		downloadConfigXlsxFromClient,
+		ensureSheet,
 		isConfigModified: readonly(isConfigModified),
 		listConfigKeys,
 		loadConfigXlsxFromServer,
 		pending: readonly(pending),
 		readCell,
 		readConfigValue,
+		readSheetHeaders,
 		readSheetRows,
 		selectedSheet,
 		selectedSheetName,
@@ -393,6 +504,7 @@ export default createGlobalState(async () => {
 		sheetNames,
 		swapSheetRows,
 		uploadConfigXlsxToServer,
+		upsertSheetRow,
 		writeCell,
 		writeConfigValue,
 		writeSheetValue,
