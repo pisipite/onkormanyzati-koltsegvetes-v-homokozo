@@ -1,4 +1,4 @@
-import ExcelJS from 'exceljs';
+import type { Workbook } from 'exceljs';
 import { parseFunctionalTreeDescriptor, parseSheetName } from '../../../scripts/prepare-data-lib';
 import type { BudgetNode } from '../../../src/utils/types';
 
@@ -9,7 +9,7 @@ export default createGlobalState(async () => {
 
 	// xlsx
 
-	const workbook = shallowRef<ExcelJS.Workbook | null>(null);
+	const workbook = shallowRef<Workbook | null>(null);
 	const workbookPending = ref(false);
 
 	async function loadBudgetXlsxFromServer() {
@@ -19,6 +19,7 @@ export default createGlobalState(async () => {
 			const buffer = await $fetch<ArrayBuffer>('/input/budget.xlsx', {
 				responseType: 'arrayBuffer',
 			});
+			const { default: ExcelJS } = await import('exceljs');
 			const wb = new ExcelJS.Workbook();
 			await wb.xlsx.load(buffer);
 			workbook.value = wb;
@@ -47,28 +48,26 @@ export default createGlobalState(async () => {
 	}
 
 	async function uploadBudgetXlsxToServer() {
-		if (workbookPending.value) return;
-		if (!workbook.value) return;
-		let success = false;
+		if (workbookPending.value || !workbook.value) return false;
 		workbookPending.value = true;
-		const buffer = await workbook.value.xlsx.writeBuffer();
-		const blob = new Blob([buffer], {
-			type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-		});
-		const formData = new FormData();
-		formData.append('budget', blob, 'budget.xlsx');
 		try {
+			const buffer = await workbook.value.xlsx.writeBuffer();
+			const blob = new Blob([buffer], {
+				type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+			});
+			const formData = new FormData();
+			formData.append('budget', blob, 'budget.xlsx');
 			await $fetch('/api/budget', {
 				method: 'POST',
 				body: formData,
 			});
-			success = true;
+			return true;
 		} catch (error) {
 			console.error('Error uploading workbook:', error);
+			return false;
 		} finally {
 			workbookPending.value = false;
 		}
-		return success;
 	}
 
 	// years

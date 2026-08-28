@@ -6,6 +6,12 @@ export default defineNuxtConfig({
 	css: ['~/assets/css/tailwind.css'],
 	devtools: { enabled: true },
 	modules: ['@nuxt/eslint', '@vueuse/nuxt', 'shadcn-nuxt'],
+	nitro: {
+		externals: {
+			trace: false,
+		},
+	},
+	ssr: false,
 	// runtimeConfig: {}
 	// intentionally NOT using runtimeConfig so that values won't be burnt into the app
 	shadcn: {

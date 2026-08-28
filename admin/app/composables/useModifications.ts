@@ -3,6 +3,10 @@ export default createGlobalState(() => {
 		'modifications',
 		() => new Map(),
 	);
+	const structureModifications = useState<Set<string>>(
+		'budget-structure-modifications',
+		() => new Set(),
+	);
 
 	function generateKey(sheetName: string, id: string) {
 		return `${sheetName}#${id}`;
@@ -43,6 +47,12 @@ export default createGlobalState(() => {
 
 	function markAllUnmodified() {
 		modifications.value.clear();
+		structureModifications.value.clear();
+	}
+
+	function markStructureModified(sheetName: string) {
+		if (!sheetName) return;
+		structureModifications.value.add(sheetName);
 	}
 
 	function isModified(sheetName: string, id: string): boolean {
@@ -66,10 +76,15 @@ export default createGlobalState(() => {
 	}
 
 	function isYearModified(year: string) {
-		return isPrefixModified(year);
+		return (
+			isPrefixModified(year) ||
+			Array.from(structureModifications.value).some((sheetName) => sheetName.startsWith(year))
+		);
 	}
 
-	const isBudgetModified = computed(() => modifications.value.size > 0);
+	const isBudgetModified = computed(
+		() => modifications.value.size > 0 || structureModifications.value.size > 0,
+	);
 
 	const beforeUnloadHandler = (event: BeforeUnloadEvent) => {
 		event.preventDefault();
@@ -91,6 +106,7 @@ export default createGlobalState(() => {
 		isModified,
 		isNewRow,
 		markModified,
+		markStructureModified,
 		markUnmodified,
 		markAllUnmodified,
 		getPreviousValue,

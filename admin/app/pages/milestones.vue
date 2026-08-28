@@ -41,10 +41,14 @@ onMounted(async () => {
 	<PageFrame title="Fejlesztéskártyák képei">
 		<PageSection class="border-0">
 			<p>
+				A konfigurációs fájlban (link a konfig menüpontra) meghatározott
+				fejlesztéskártyákhoz kapcsolódó képeket ezen az oldalon lehet feltölteni. Az
+				excelben pontos fájlnevet kell megadni.
+			</p>
+			<p>
 				A feltöltött fájlok eredeti neve megmarad, a szerveren levő azonos nevű fájl felül
 				lesz írva. Egyszerre több fájl is feltölthető. Ajánlott ékezet és szóköz mentes
-				fájlnevekkel dolgozni. A konfigban a fájlnevet pontosan kell megadni, mappanevet nem
-				kell eléírni.
+				fájlnevekkel dolgozni.
 			</p>
 			<p>
 				A képeket ajánlott feltöltés előtt 1200 pixel szélesre kicsinyíteni arányosan, JPG
@@ -66,11 +70,15 @@ onMounted(async () => {
 							type="file"
 							multiple
 							@change="uploadMs"
-						/>
+						>
 					</label>
 				</Button>
 			</template>
 		</PageSection>
+
+		<div class="px-4 lg:px-8">
+			<ConfigMilestonesEditor />
+		</div>
 
 		<div class="container mx-auto px-16">
 			<ItemGroup class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
@@ -111,4 +119,11 @@ onMounted(async () => {
 			</ItemGroup>
 		</div>
 	</PageFrame>
+	<!-- eslint-disable-next-line vue/no-multiple-template-root -->
+	<ConfigSaveBanner
+		confirm-message="Biztosan el akarod vetni a fejlesztéskártyák módosításait?"
+		error-message="Nem sikerült elmenteni a fejlesztéskártyákat."
+		success-message="Fejlesztéskártyák sikeresen elmentve!"
+		title="Nem mentett fejlesztéskártya-módosítások"
+	/>
 </template>

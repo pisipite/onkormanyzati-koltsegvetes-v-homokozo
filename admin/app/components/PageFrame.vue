@@ -1,12 +1,14 @@
 <script setup lang="ts">
-const { title } = defineProps<{
+const { groupTitle = undefined, title } = defineProps<{
 	groupTitle?: string;
 	title: string;
 }>();
 
+const { cityName } = useCityName();
+
 useHead({
 	title,
-	titleTemplate: '%s | KÖKÖ Admin',
+	titleTemplate: computed(() => ['%s | KÖKÖ Admin', cityName.value].filter(Boolean).join(' - ')),
 });
 </script>
 

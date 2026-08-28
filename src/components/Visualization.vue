@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import tinycolor from 'tinycolor2';
 
-const { defaultMode, year, side, height } = defineProps<{
+defineOptions({ name: 'BudgetVisualization' });
+
+const {
+	defaultMode,
+	year,
+	side,
+	height = 500,
+} = defineProps<{
 	defaultMode: number;
 	year: string;
 	side: 'expense' | 'income';
@@ -25,7 +32,7 @@ const children = computed(() => {
 		return (node.value?.children || [])
 			.filter((node) => !String(node.id).startsWith('F'))
 			.sort((a, b) => b.value - a.value);
-	} catch (e) {
+	} catch {
 		return [];
 	}
 });
@@ -136,7 +143,7 @@ function curve(index: number) {
 		const c2 = cx2 + ',' + y2;
 		const e = x2 + ',' + y2;
 		return ['M' + m, 'C' + c1, c2, e].join(' ');
-	} catch (e) {
+	} catch {
 		return '';
 	}
 }
@@ -173,7 +180,7 @@ function milestoneId(node: BudgetNode) {
 	try {
 		const mid = MILESTONE_RELS[year]?.[String(node.id)];
 		return mid ? mid : null;
-	} catch (e) {
+	} catch {
 		return null;
 	}
 }
@@ -191,7 +198,6 @@ onMounted(() => {
 	});
 
 	eventBus.on('jump', (target) => {
-		console.log('ON jump', target);
 		if (target.side == side) {
 			mode.value = target.type == 'econ' ? 0 : 1;
 			path.value = [];
@@ -331,7 +337,7 @@ onUpdated(regenerateTooltips);
 							<span class="d-none d-md-inline ml-1"
 								>({{ Math.round((n.value / (node?.value || 1)) * 100) }}%)</span
 							>
-							<span class="d-sm-none"><br />{{ n.name }}</span>
+							<span class="d-sm-none"><br >{{ n.name }}</span>
 							<i
 								v-if="n.children && n.children.length"
 								class="fas fa-fw fa-level-down-alt ml-1"

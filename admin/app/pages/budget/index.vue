@@ -18,8 +18,7 @@ async function uploadBudget(e: Event) {
 }
 
 async function save() {
-	await uploadBudgetXlsxToServer();
-	await loadBudgetXlsxFromServer();
+	if (await uploadBudgetXlsxToServer()) await loadBudgetXlsxFromServer();
 }
 </script>
 
@@ -79,7 +78,14 @@ async function save() {
 		<PageSection>
 			<p>
 				Az alábbi gombbal tudsz feltölteni új <code>budget.xlsx</code> fájlt, felülírva a
-				szerveren levő változatot.
+				szerveren levő változatot. Excel 2007-O365 (*.xlsx) fájlt kell feltölteni, melynek
+				szerkezete követi a
+				<a
+					href="https://github.com/k-monitor/onkormanyzati-koltsegvetes-v2#inputbudgetxlsx"
+					target="_blank"
+					>dokumentációban</a
+				>
+				írtakat.
 				<strong
 					v-if="isBudgetModified"
 					class="text-modification"
@@ -101,7 +107,7 @@ async function save() {
 							style="display: none"
 							type="file"
 							@change="uploadBudget"
-						/>
+						>
 					</label>
 				</Button>
 			</template>
