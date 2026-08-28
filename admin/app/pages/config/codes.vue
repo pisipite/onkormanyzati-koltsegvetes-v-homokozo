@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { Download, Save, Undo, Upload } from 'lucide-vue-next';
-import { toast } from 'vue-sonner';
+import { Download, Upload } from 'lucide-vue-next';
 
 const { loadFunctionsTsvFromServer } = await useBudgetData();
 const {
 	downloadConfigXlsxFromClient,
-	isConfigModified,
 	loadConfigXlsxFromServer,
-	uploadConfigXlsxToServer,
 } = await useConfigData();
 
 async function uploadConfig(e: Event) {
@@ -16,53 +13,10 @@ async function uploadConfig(e: Event) {
 	await loadFunctionsTsvFromServer();
 }
 
-async function saveConfig() {
-	const success = await uploadConfigXlsxToServer();
-	if (!success) {
-		toast.error('Nem sikerült elmenteni a rovatkódokat.');
-		return;
-	}
-	await loadConfigXlsxFromServer();
-	await loadFunctionsTsvFromServer();
-	toast.success('Rovatkódok sikeresen elmentve!');
-}
-
-async function revertConfigChanges() {
-	if (!confirm('Biztosan el akarod vetni a rovatkódok módosításait?')) return;
-	await loadConfigXlsxFromServer();
-}
 </script>
 
 <template>
 	<PageFrame title="Rovatkódok követése">
-		<PageSection v-if="isConfigModified">
-			<p class="text-modification *:text-modification">
-				<strong>A rovatkódok módosultak, de még nincsenek elmentve</strong>
-				a szerveren levő <code>config.xlsx</code> fájlba.
-			</p>
-			<template #actions>
-				<Button
-					variant="secondary"
-					@click="downloadConfigXlsxFromClient"
-				>
-					<Download />
-					Letöltés
-				</Button>
-				<Button @click="saveConfig">
-					<Save />
-					Mentés
-				</Button>
-				<Button
-					class="ml-auto"
-					variant="modification"
-					@click="revertConfigChanges"
-				>
-					<Undo />
-					Elvetés
-				</Button>
-			</template>
-		</PageSection>
-
 		<PageSection>
 			<p>
 				Itt tudod ellenőrizni és szerkeszteni a költségvetési rovatkódokhoz tartozó
@@ -95,4 +49,12 @@ async function revertConfigChanges() {
 			<ConfigCodeRegistry />
 		</div>
 	</PageFrame>
+	<!-- eslint-disable-next-line vue/no-multiple-template-root -->
+	<ConfigSaveBanner
+		confirm-message="Biztosan el akarod vetni a rovatkódok módosításait?"
+		error-message="Nem sikerült elmenteni a rovatkódokat."
+		refresh-app-data
+		success-message="Rovatkódok sikeresen elmentve!"
+		title="Nem mentett rovatkód-módosítások"
+	/>
 </template>

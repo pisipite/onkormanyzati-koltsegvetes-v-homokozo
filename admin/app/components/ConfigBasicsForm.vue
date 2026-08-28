@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { addConfigValue, readConfigValue, writeConfigValue } = await useConfigData();
+const { readConfigValue, writeConfigValue } = await useConfigData();
 const { years } = await useBudgetData();
 
 type TextField = {
@@ -172,14 +172,6 @@ function setValue(key: string, value: string) {
 	writeConfigValue(key, value);
 }
 
-function setThemeValue(year: string, value: string) {
-	const key = `theme.${year}`;
-	if (!getValue(key)) {
-		addConfigValue(key, value, '', 'theme.', 'font.vis');
-		return;
-	}
-	setValue(key, value);
-}
 </script>
 
 <template>
@@ -203,36 +195,6 @@ function setThemeValue(year: string, value: string) {
 				</SelectContent>
 			</Select>
 		</ConfigFieldRow>
-		<div class="bg-muted/20 border-b px-4 py-4">
-			<div class="mb-3 flex flex-col gap-1">
-				<h3 class="text-sm font-semibold">Évek színei</h3>
-				<p class="text-muted-foreground text-sm">
-					A költségvetésben szereplő évekhez tartozó témaszínek.
-				</p>
-			</div>
-			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-				<label
-					v-for="year in availableYears"
-					:key="year"
-					class="bg-background grid gap-2 rounded-md border p-3"
-				>
-					<span class="text-sm font-medium">{{ year }}</span>
-					<div class="flex items-center gap-2">
-						<Input
-							class="h-10 w-14 p-1"
-							:model-value="getValue(`theme.${year}`) || '#000000'"
-							type="color"
-							@update:model-value="setThemeValue(year, String($event))"
-						/>
-						<Input
-							:model-value="getValue(`theme.${year}`)"
-							placeholder="#000000"
-							@update:model-value="setThemeValue(year, String($event))"
-						/>
-					</div>
-				</label>
-			</div>
-		</div>
 		<ConfigTextField
 			v-for="field in textFields.slice(0, 6)"
 			:key="field.key"

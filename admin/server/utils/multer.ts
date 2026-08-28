@@ -15,7 +15,10 @@ export function useMulter(dir: string, filename: string | null, filetypes: strin
 			},
 		}),
 		fileFilter: (req, file, cb) => {
-			if (filetypes.includes(file.mimetype)) {
+			const isAllowedXlsx =
+				filetypes.includes(XLSX_MIME_TYPE) && path.extname(file.originalname).toLowerCase() === '.xlsx';
+
+			if (filetypes.includes(file.mimetype) || isAllowedXlsx) {
 				cb(null, true);
 			} else {
 				cb(new Error('Invalid file type'));

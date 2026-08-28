@@ -165,7 +165,7 @@ function setRowValue(rowNumber: number, header: string, value: string) {
 	writeSheetValue('milestones', rowNumber, header, value);
 }
 
-function addMilestone() {
+async function addMilestone() {
 	if (!selectedYear.value) return;
 	addSheetRow('milestones', {
 		year: selectedYear.value,
@@ -178,6 +178,16 @@ function addMilestone() {
 		pos: '',
 		onlyOnMap: '',
 	});
+	await nextTick();
+
+	const newRow = filteredRows.value.at(-1);
+	if (!newRow) return;
+
+	const card = document.querySelector<HTMLElement>(
+		`[data-milestone-row="${newRow.rowNumber}"]`,
+	);
+	card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+	card?.querySelector<HTMLInputElement>('input')?.focus({ preventScroll: true });
 }
 
 function deleteMilestone(rowNumber: number, title: string) {
@@ -260,6 +270,16 @@ onMounted(updateMediaFiles);
 			class="text-muted-foreground rounded-md border border-dashed bg-white p-6 text-center text-sm"
 		>
 			Nincs megjeleníthető fejlesztéskártya a kiválasztott évhez.
+		</div>
+		<div class="mt-4 flex justify-end">
+			<Button
+				:disabled="!selectedYear"
+				type="button"
+				@click="addMilestone"
+			>
+				<Plus />
+				Új kártya
+			</Button>
 		</div>
 	</section>
 </template>

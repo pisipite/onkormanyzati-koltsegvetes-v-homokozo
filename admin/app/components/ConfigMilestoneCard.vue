@@ -72,6 +72,7 @@ function updateCommaSeparatedValue(header: string, values: string[]) {
 <template>
 	<article
 		class="bg-background grid min-w-0 gap-0 overflow-visible rounded-md border xl:grid-cols-[10rem_minmax(0,1fr)]"
+		:data-milestone-row="row.rowNumber"
 	>
 		<div class="border-b p-3 xl:border-r xl:border-b-0">
 			<div

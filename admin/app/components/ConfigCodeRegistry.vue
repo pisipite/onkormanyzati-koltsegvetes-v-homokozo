@@ -19,14 +19,16 @@ const tooltipNameHeader = 'Megnevezés';
 const tooltipTextHeader = 'Súgószöveg';
 
 const {
-	deleteSheetRowByHeaderValue,
 	ensureSheet,
-	readConfigValue,
-	readSheetHeaders,
 	readSheetRows,
 	upsertSheetRow,
 	writeSheetValue,
 } = await useConfigData();
+const {
+	ids: kgrIds,
+	isLimitEnabled: kgrLimitEnabled,
+	setEnabled: setKgrCodeEnabled,
+} = await useTimelineCodeTracking();
 const { emptyFuncTree, workbook, years: budgetYears } = await useBudgetData();
 
 const selectedYear = ref('');
@@ -64,9 +66,6 @@ const tooltipRowsByYear = computed(() => {
 	}
 	return map;
 });
-const kgrHeaders = computed(() => readSheetHeaders('kgr'));
-const kgrRows = computed(() => readSheetRows('kgr'));
-
 const tooltipsById = computed(() => {
 	const map = new Map<string, { rowNumber: number; text: string }>();
 	tooltipRows.value.forEach((row) => {
@@ -79,23 +78,6 @@ const tooltipsById = computed(() => {
 	});
 	return map;
 });
-
-const kgrCodeHeader = computed(
-	() => ['code', 'codes'].find((header) => kgrHeaders.value.includes(header)) || 'code',
-);
-
-const kgrLimitEnabled = computed(() =>
-	['1', 'true', 'igen'].includes(readConfigValue('timeseries.kgrOnly').trim().toLowerCase()),
-);
-
-const kgrIds = computed(
-	() =>
-		new Set(
-			kgrRows.value
-				.map((row) => (row.values[kgrCodeHeader.value] || '').trim())
-				.filter(Boolean),
-		),
-);
 
 const allEntriesByYear = computed(() => {
 	const map = new Map<string, CodeEntry[]>();
@@ -377,12 +359,7 @@ function setSelectedCopyYear(entry: CodeEntry, year: string) {
 }
 
 function setKgr(entry: CodeEntry, enabled: boolean) {
-	if (!kgrLimitEnabled.value) return;
-	if (enabled) {
-		upsertSheetRow('kgr', kgrCodeHeader.value, entry.id, { [kgrCodeHeader.value]: entry.id });
-	} else {
-		deleteSheetRowByHeaderValue('kgr', kgrCodeHeader.value, entry.id);
-	}
+	setKgrCodeEnabled(entry.id, enabled);
 }
 
 const allVisibleKgrEnabled = computed(
@@ -546,15 +523,25 @@ function updateTooltipSheetNames() {
 					<div>Súgószöveg</div>
 					<div class="space-y-1">
 						<div>Idősoron szerepel</div>
-						<Button
+						<button
+							aria-label="Minden látható rovatkód idősoros megjelenítése"
+							:aria-checked="allVisibleKgrEnabled"
 							:disabled="!kgrLimitEnabled || !selectedEntries.length"
-							class="h-7 px-2 text-xs"
+							class="border-input bg-background data-[state=checked]:bg-primary relative inline-flex h-8 w-16 shrink-0 items-center rounded-full border px-1 transition-colors"
+							:class="
+								(!kgrLimitEnabled || !selectedEntries.length) &&
+								'cursor-not-allowed opacity-50'
+							"
+							:data-state="allVisibleKgrEnabled ? 'checked' : 'unchecked'"
+							role="switch"
 							type="button"
-							variant="secondary"
 							@click="toggleVisibleKgr"
 						>
-							Mindet kapcsol
-						</Button>
+							<span
+								class="bg-background pointer-events-none block size-6 rounded-full border shadow-sm transition-transform data-[state=checked]:translate-x-8"
+								:data-state="allVisibleKgrEnabled ? 'checked' : 'unchecked'"
+							/>
+						</button>
 					</div>
 					<div>Megnevezések</div>
 				</div>

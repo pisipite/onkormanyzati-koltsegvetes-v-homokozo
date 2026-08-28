@@ -48,28 +48,26 @@ export default createGlobalState(async () => {
 	}
 
 	async function uploadBudgetXlsxToServer() {
-		if (workbookPending.value) return;
-		if (!workbook.value) return;
-		let success = false;
+		if (workbookPending.value || !workbook.value) return false;
 		workbookPending.value = true;
-		const buffer = await workbook.value.xlsx.writeBuffer();
-		const blob = new Blob([buffer], {
-			type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-		});
-		const formData = new FormData();
-		formData.append('budget', blob, 'budget.xlsx');
 		try {
+			const buffer = await workbook.value.xlsx.writeBuffer();
+			const blob = new Blob([buffer], {
+				type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+			});
+			const formData = new FormData();
+			formData.append('budget', blob, 'budget.xlsx');
 			await $fetch('/api/budget', {
 				method: 'POST',
 				body: formData,
 			});
-			success = true;
+			return true;
 		} catch (error) {
 			console.error('Error uploading workbook:', error);
+			return false;
 		} finally {
 			workbookPending.value = false;
 		}
-		return success;
 	}
 
 	// years

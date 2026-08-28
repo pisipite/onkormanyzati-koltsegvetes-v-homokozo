@@ -1,15 +1,9 @@
 <script setup lang="ts">
-import { Download, Save, Trash, Undo, Upload } from 'lucide-vue-next';
+import { Trash, Upload } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 
 const loading = useLoading();
 const serverUrl = useServerUrl();
-const {
-	downloadConfigXlsxFromClient,
-	isConfigModified,
-	loadConfigXlsxFromServer,
-	uploadConfigXlsxToServer,
-} = await useConfigData();
 
 const ms = ref<string[]>();
 async function updateMs() {
@@ -36,21 +30,6 @@ async function delMs(f: string) {
 	}
 }
 
-async function saveConfig() {
-	const success = await uploadConfigXlsxToServer();
-	if (!success) {
-		toast.error('Nem sikerült elmenteni a fejlesztéskártyákat.');
-		return;
-	}
-	await loadConfigXlsxFromServer();
-	toast.success('Fejlesztéskártyák sikeresen elmentve!');
-}
-
-async function revertConfigChanges() {
-	if (!confirm('Biztosan el akarod vetni a fejlesztéskártyák módosításait?')) return;
-	await loadConfigXlsxFromServer();
-}
-
 onMounted(async () => {
 	loading.value = true;
 	await updateMs();
@@ -60,33 +39,6 @@ onMounted(async () => {
 
 <template>
 	<PageFrame title="Fejlesztéskártyák képei">
-		<PageSection v-if="isConfigModified">
-			<p class="text-modification *:text-modification">
-				<strong>A fejlesztéskártyák módosultak, de még nincsenek elmentve</strong>
-				a szerveren levő <code>config.xlsx</code> fájlba.
-			</p>
-			<template #actions>
-				<Button
-					variant="secondary"
-					@click="downloadConfigXlsxFromClient"
-				>
-					<Download />
-					Letöltés
-				</Button>
-				<Button @click="saveConfig">
-					<Save />
-					Mentés
-				</Button>
-				<Button
-					class="ml-auto"
-					variant="modification"
-					@click="revertConfigChanges"
-				>
-					<Undo />
-					Elvetés
-				</Button>
-			</template>
-		</PageSection>
 		<PageSection class="border-0">
 			<p>
 				A konfigurációs fájlban (link a konfig menüpontra) meghatározott
@@ -167,4 +119,11 @@ onMounted(async () => {
 			</ItemGroup>
 		</div>
 	</PageFrame>
+	<!-- eslint-disable-next-line vue/no-multiple-template-root -->
+	<ConfigSaveBanner
+		confirm-message="Biztosan el akarod vetni a fejlesztéskártyák módosításait?"
+		error-message="Nem sikerült elmenteni a fejlesztéskártyákat."
+		success-message="Fejlesztéskártyák sikeresen elmentve!"
+		title="Nem mentett fejlesztéskártya-módosítások"
+	/>
 </template>

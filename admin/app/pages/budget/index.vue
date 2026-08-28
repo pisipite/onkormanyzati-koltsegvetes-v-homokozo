@@ -18,8 +18,7 @@ async function uploadBudget(e: Event) {
 }
 
 async function save() {
-	await uploadBudgetXlsxToServer();
-	await loadBudgetXlsxFromServer();
+	if (await uploadBudgetXlsxToServer()) await loadBudgetXlsxFromServer();
 }
 </script>
 

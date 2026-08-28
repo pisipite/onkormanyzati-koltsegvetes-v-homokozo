@@ -8,6 +8,11 @@ const { year } = defineProps<{
 
 const { loadBudgetXlsxFromServer, uploadBudgetXlsxToServer, workbook, years } =
 	await useBudgetData();
+const {
+	loadConfigXlsxFromServer,
+	renameYearReferences,
+	uploadConfigXlsxToServer,
+} = await useConfigData();
 
 const newNameInput = ref(year);
 const newYear = computed(() => newNameInput.value.replaceAll(/\s+/g, ' ').trim());
@@ -29,10 +34,18 @@ async function handleRename() {
 		if (!incomeSheet || !expenseSheet) {
 			throw new Error('Nem találhatók a munkalapok!');
 		}
+		const configChanged = await renameYearReferences(year, newYear.value);
 		renameSheet(workbook.value, incomeSheet, `${newYear.value} BEVÉTEL`);
 		renameSheet(workbook.value, expenseSheet, `${newYear.value} KIADÁS`);
-		await uploadBudgetXlsxToServer();
-		await loadBudgetXlsxFromServer();
+
+		const budgetSaved = await uploadBudgetXlsxToServer();
+		if (!budgetSaved) throw new Error('Nem sikerült elmenteni a költségvetést.');
+		if (configChanged) {
+			const configSaved = await uploadConfigXlsxToServer();
+			if (!configSaved) throw new Error('Nem sikerült elmenteni a konfigurációt.');
+		}
+
+		await Promise.all([loadBudgetXlsxFromServer(), loadConfigXlsxFromServer()]);
 		await router.replace(`/budget/${slugifyYear(newYear.value)}/`);
 		toast.success('Év sikeresen átnevezve!');
 	} catch (e: unknown) {

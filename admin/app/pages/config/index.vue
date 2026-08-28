@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Cog, Download, Save, Undo, Upload } from 'lucide-vue-next';
+import { Cog, Download, Upload } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 
 const loading = useLoading();
@@ -7,13 +7,11 @@ const { loadFunctionsTsvFromServer } = await useBudgetData();
 const { reload: reloadCityName } = useCityName();
 const {
 	downloadConfigXlsxFromClient,
-	isConfigModified,
 	loadConfigXlsxFromServer,
 	readCell,
 	selectedSheetName,
 	selectedSheetRange,
 	sheetNames,
-	uploadConfigXlsxToServer,
 	writeCell,
 } = await useConfigData();
 
@@ -48,23 +46,6 @@ async function uploadConfig(e: Event) {
 	await reloadCityName();
 }
 
-async function saveConfig() {
-	const success = await uploadConfigXlsxToServer();
-	if (!success) {
-		toast.error('Nem sikerült elmenteni a konfigurációt.');
-		return;
-	}
-	await loadConfigXlsxFromServer();
-	await loadFunctionsTsvFromServer();
-	await reloadCityName();
-	toast.success('Konfiguráció sikeresen elmentve!');
-}
-
-async function revertConfigChanges() {
-	if (!confirm('Biztosan el akarod vetni a konfiguráció módosításait?')) return;
-	await loadConfigXlsxFromServer();
-}
-
 function updateCell(row: number, column: number, value: string | number) {
 	writeCell(row, column, String(value));
 }
@@ -72,34 +53,6 @@ function updateCell(row: number, column: number, value: string | number) {
 
 <template>
 	<PageFrame title="Konfiguráció">
-		<PageSection v-if="isConfigModified">
-			<p class="text-modification *:text-modification">
-				<strong>A konfiguráció módosult, de még nincs elmentve</strong>
-				a szerveren levő <code>config.xlsx</code> fájlba. A módosítások elvesznek a
-				böngészőlap bezárásakor, újratöltésekor vagy új konfiguráció feltöltésekor.
-			</p>
-			<template #actions>
-				<Button
-					variant="secondary"
-					@click="downloadConfigXlsxFromClient"
-				>
-					<Download />
-					Letöltés
-				</Button>
-				<Button @click="saveConfig">
-					<Save />
-					Mentés
-				</Button>
-				<Button
-					class="ml-auto"
-					variant="modification"
-					@click="revertConfigChanges"
-				>
-					<Undo />
-					Elvetés
-				</Button>
-			</template>
-		</PageSection>
 		<PageSection>
 			<p>
 				Itt tudod áttekinteni és szerkeszteni a <code>config.xlsx</code> munkalapjait. A
@@ -129,6 +82,7 @@ function updateCell(row: number, column: number, value: string | number) {
 			<div class="not-prose mt-4 flex flex-col gap-4">
 				<ConfigModulesForm />
 				<ConfigBasicsForm />
+				<ConfigColorsForm />
 				<ConfigSearchForm />
 				<ConfigWelcomeForm />
 				<ConfigPublicationForm />
@@ -263,4 +217,6 @@ function updateCell(row: number, column: number, value: string | number) {
 			</template>
 		</PageSection>
 	</PageFrame>
+	<!-- eslint-disable-next-line vue/no-multiple-template-root -->
+	<ConfigSaveBanner refresh-app-data />
 </template>

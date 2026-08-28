@@ -149,6 +149,37 @@ function findSheetRowByHeaderValue(sheet: Worksheet, header: string, value: stri
 	return undefined;
 }
 
+function renameConfigRowKey(
+	sheet: Worksheet,
+	oldKey: string,
+	newKey: string,
+	oldYear: string,
+	newYear: string,
+) {
+	const sourceRow = findConfigRow(sheet, oldKey);
+	if (!sourceRow) return false;
+
+	const targetRow = findConfigRow(sheet, newKey);
+	if (targetRow && targetRow.number !== sourceRow.number) {
+		const columnCount = Math.max(sourceRow.cellCount, targetRow.cellCount);
+		for (let columnNumber = 1; columnNumber <= columnCount; columnNumber++) {
+			targetRow.getCell(columnNumber).value = sourceRow.getCell(columnNumber).value;
+		}
+		targetRow.getCell(1).value = newKey;
+		const helpCell = targetRow.getCell(3);
+		const help = cellValueToText(helpCell.value);
+		if (help.includes(oldYear)) helpCell.value = help.replaceAll(oldYear, newYear);
+		sheet.spliceRows(sourceRow.number, 1);
+		return true;
+	}
+
+	sourceRow.getCell(1).value = newKey;
+	const helpCell = sourceRow.getCell(3);
+	const help = cellValueToText(helpCell.value);
+	if (help.includes(oldYear)) helpCell.value = help.replaceAll(oldYear, newYear);
+	return true;
+}
+
 function trackRevision(revision: Ref<number>) {
 	return revision.value;
 }
@@ -177,6 +208,7 @@ export default createGlobalState(async () => {
 		pending.value = true;
 		try {
 			const buffer = await $fetch<ArrayBuffer>('/input/config.xlsx', {
+				query: { t: Date.now() },
 				responseType: 'arrayBuffer',
 			});
 			const { default: ExcelJS } = await import('exceljs');
@@ -234,13 +266,96 @@ export default createGlobalState(async () => {
 
 	function writeConfigValue(key: string, value: string) {
 		const sheet = workbook.value?.getWorksheet('config');
-		if (!sheet) return;
+		if (!sheet) return false;
 		const row = findConfigRow(sheet, key);
-		if (!row) return;
+		if (!row) return false;
 		const cell = row.getCell(2);
-		if (!writeCellText(cell, value)) return;
+		if (!writeCellText(cell, value)) return true;
 		isConfigModified.value = true;
 		revision.value++;
+		return true;
+	}
+
+	async function renameYearReferences(oldYear: string, newYear: string) {
+		if (!oldYear || !newYear || oldYear === newYear) return false;
+		if (!workbook.value) await loadConfigXlsxFromServer();
+		const configWorkbook = workbook.value;
+		if (!configWorkbook) throw new Error('Nem található a konfigurációs munkafüzet.');
+
+		const oldTooltipSheet = configWorkbook.getWorksheet(`tooltips ${oldYear}`);
+		const newTooltipSheet = configWorkbook.getWorksheet(`tooltips ${newYear}`);
+		if (oldTooltipSheet && newTooltipSheet) {
+			throw new Error(`Már létezik a következő munkalap: tooltips ${newYear}`);
+		}
+
+		let changed = false;
+		const configSheet = configWorkbook.getWorksheet('config');
+		if (configSheet) {
+			const defaultYearRow = findConfigRow(configSheet, 'defaultYear');
+			if (
+				defaultYearRow &&
+				cellValueToText(defaultYearRow.getCell(2).value).trim() === oldYear
+			) {
+				defaultYearRow.getCell(2).value = newYear;
+				changed = true;
+			}
+
+			const timeseriesYearsRow = findConfigRow(configSheet, 'timeseries.years');
+			if (timeseriesYearsRow) {
+				const currentYears = cellValueToText(timeseriesYearsRow.getCell(2).value);
+				const renamedYears = currentYears
+					.split(',')
+					.map((year) => (year.trim() === oldYear ? newYear : year.trim()))
+					.filter(Boolean)
+					.join(',');
+				if (renamedYears !== currentYears) {
+					timeseriesYearsRow.getCell(2).value = renamedYears;
+					changed = true;
+				}
+			}
+
+			for (const prefix of [
+				'theme.',
+				'welcome.leftBlocks.',
+				'welcome.names.',
+				'inflations.',
+				'gdps.',
+			]) {
+				changed =
+					renameConfigRowKey(
+						configSheet,
+						`${prefix}${oldYear}`,
+						`${prefix}${newYear}`,
+						oldYear,
+						newYear,
+					) || changed;
+			}
+		}
+
+		const milestonesSheet = configWorkbook.getWorksheet('milestones');
+		if (milestonesSheet) {
+			const yearColumn = findHeaderColumn(milestonesSheet, 'year');
+			if (yearColumn) {
+				const { rowCount } = findUsedRange(milestonesSheet);
+				for (let rowNumber = 2; rowNumber <= rowCount; rowNumber++) {
+					const cell = milestonesSheet.getRow(rowNumber).getCell(yearColumn);
+					if (cellValueToText(cell.value).trim() !== oldYear) continue;
+					cell.value = newYear;
+					changed = true;
+				}
+			}
+		}
+
+		if (oldTooltipSheet) {
+			oldTooltipSheet.name = `tooltips ${newYear}`;
+			changed = true;
+		}
+
+		if (changed) {
+			isConfigModified.value = true;
+			revision.value++;
+		}
+		return changed;
 	}
 
 	function listConfigKeys(prefix: string) {
@@ -498,6 +613,7 @@ export default createGlobalState(async () => {
 		readConfigValue,
 		readSheetHeaders,
 		readSheetRows,
+		renameYearReferences,
 		selectedSheet,
 		selectedSheetName,
 		selectedSheetRange,

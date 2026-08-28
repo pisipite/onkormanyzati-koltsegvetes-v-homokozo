@@ -48,6 +48,10 @@ const links = computed(() => {
 			icon: Settings,
 			items: [
 				{
+					href: '/config/items/',
+					text: 'Tételek követése',
+				},
+				{
 					href: '/config/codes/',
 					text: 'Rovatkódok követése',
 				},

@@ -2,6 +2,10 @@
 import { CircleAlert } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 
+withDefaults(defineProps<{ sticky?: boolean }>(), {
+	sticky: true,
+});
+
 const { loadBudgetXlsxFromServer, uploadBudgetXlsxToServer } = await useBudgetData();
 const { isBudgetModified } = useModifications();
 
@@ -12,21 +16,21 @@ function revertChanges() {
 
 async function save() {
 	if (!isBudgetModified.value) return;
-	try {
-		await uploadBudgetXlsxToServer();
-		await loadBudgetXlsxFromServer();
-		toast.success('Költségvetés sikeresen elmentve!');
-	} catch (e: unknown) {
-		console.error(e);
+	const saved = await uploadBudgetXlsxToServer();
+	if (!saved) {
 		toast.error('Nem sikerült elmenteni a költségvetést.');
+		return;
 	}
+	await loadBudgetXlsxFromServer();
+	toast.success('Költségvetés sikeresen elmentve!');
 }
 </script>
 
 <template>
 	<div
 		v-if="isBudgetModified"
-		class="sticky bottom-0 flex items-center justify-between gap-4 border-t border-b bg-white px-4 py-0!"
+		class="flex items-center justify-between gap-4 border-t border-b bg-white px-4 py-0!"
+		:class="sticky && 'sticky bottom-0'"
 	>
 		<Alert
 			v-if="isBudgetModified"
