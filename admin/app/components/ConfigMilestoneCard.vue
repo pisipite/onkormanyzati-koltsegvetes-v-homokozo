@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, Trash2 } from 'lucide-vue-next';
+import { ArrowDown, ArrowUp, Copy, Trash2 } from 'lucide-vue-next';
 
 type MilestoneRow = {
 	rowNumber: number;
@@ -24,6 +24,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
 	(e: 'delete', rowNumber: number, title: string): void;
+	(e: 'duplicate', rowNumber: number): void;
 	(e: 'move', rowNumber: number, direction: -1 | 1): void;
 	(e: 'update', rowNumber: number, header: string, value: string): void;
 }>();
@@ -238,15 +239,26 @@ function updateCommaSeparatedValue(header: string, values: string[]) {
 					Le
 				</Button>
 			</div>
-			<Button
-				size="sm"
-				type="button"
-				variant="destructive"
-				@click="emit('delete', row.rowNumber, row.values.title)"
-			>
-				<Trash2 />
-				Törlés
-			</Button>
+			<div class="flex flex-wrap items-center gap-2">
+				<Button
+					size="sm"
+					type="button"
+					variant="outline"
+					@click="emit('duplicate', row.rowNumber)"
+				>
+					<Copy />
+					Másolás másik évbe
+				</Button>
+				<Button
+					size="sm"
+					type="button"
+					variant="destructive"
+					@click="emit('delete', row.rowNumber, row.values.title)"
+				>
+					<Trash2 />
+					Törlés
+				</Button>
+			</div>
 		</div>
 	</article>
 </template>
