@@ -8,7 +8,7 @@ export default defineEventHandler((event) => {
 			'README.md',
 			'nuxt.config.ts',
 			'package.json',
-			'pnpm-lock.yaml',
+			'package-lock.json',
 			'tsconfig.json',
 		],
 	);

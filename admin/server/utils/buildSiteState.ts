@@ -59,7 +59,7 @@ export function tryStartBuildSite() {
 
 async function runBuildAndDeploy() {
 	try {
-		const buildResult = await runBuildStep('pnpm build', {
+		const buildResult = await runBuildStep('npm run build', {
 			...process.env,
 			NUXT_APP_BASE_URL: process.env.SITE_BASE_URL || '',
 			NODE_ENV: 'production',

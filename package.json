@@ -6,14 +6,17 @@
 	"private": true,
 	"license": "GPL-3.0",
 	"author": "Zsolt Jurányi <juranyi.zsolt@k-monitor.hu>",
+	"workspaces": [
+		"admin"
+	],
 	"scripts": {
 		"dev": "nuxt dev",
 		"build": "nuxt generate",
 		"prepare": "tsx scripts/prepare.js",
 		"new-config": "tsx scripts/generate-config",
-		"dev:admin": "nuxt dev admin",
-		"build:admin": "nuxt build admin",
-		"admin": "node --env-file=admin/.env admin/.output/server/index.mjs"
+		"dev:admin": "npm run dev --workspace=admin",
+		"build:admin": "npm run build --workspace=admin",
+		"admin": "npm run start --workspace=admin"
 	},
 	"dependencies": {
 		"@nuxt/scripts": "0.13.0",
@@ -45,5 +48,9 @@
 		"typescript": "^5.9.3",
 		"xlsx": "^0.14.3"
 	},
-	"packageManager": "pnpm@11.2.2+sha512.36e6621fad506178936455e70247b8808ef4ec25797a9f437a93281a020484e2607f6a469a22e982987c3dbb8866e3071514ab10a4a1749e06edcd1ec118436f"
+	"engines": {
+		"node": "22.x",
+		"npm": ">=10"
+	},
+	"packageManager": "npm@10.9.2"
 }

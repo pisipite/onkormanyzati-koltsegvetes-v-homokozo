@@ -13,9 +13,9 @@ _Copyright &copy; 2025 K-Monitor_
 ## Változások korábbi verzióhoz képest
 
 - minimum Node verzió: v12 -> v22
-- yarn -> pnpm
+- a projekt npm csomagkezelővel telepíthető
 - `src/favicon.png` -> `static/assets/img/favicon.png` (a program automatikusan átmozgatja)
-- az admin felületet build-elni kell indítás előtt: `cd admin && pnpm i && cd .. && pnpm build:admin && pnpm admin`
+- az admin felületet build-elni kell indítás előtt: `npm install && npm run build:admin && npm run admin`
 - `ADMIN_PORT` -> `PORT`
 
 ## Beüzemelés
@@ -24,15 +24,15 @@ A weboldal a Nuxt keretrendszeren alapul, ami a forrásfájlokból egy optimaliz
 
 A beüzemelés lépései:
 
-1. Telepíts Node.js-t (legalább v20) és PNPM-et, ezek adják az alapvető környezetet a projekthez.
-1. A projekt mappájában futtasd le a `pnpm install` parancsot, ez letölti a szükséges csomagokat a `node_modules` mappába.
+1. Telepítsd a Node.js 22-es verzióját. Az npm csomagkezelő a Node.js részeként települ.
+1. A projekt mappájában futtasd le az `npm install` parancsot, ez a főoldal és az admin szükséges csomagjait is letölti.
 1. Másold be az önkormányzattól kapott XLSX fájlt az `input` mappába, `budget.xlsx` néven.
-1. Futtasd le a `pnpm new-config` parancsot, ez legenerálja az `input/config.xlsx` fájlt, melynek tartalma részben függ a `budget.xlsx`-től.
+1. Futtasd le az `npm run new-config` parancsot, ez legenerálja az `input/config.xlsx` fájlt, melynek tartalma részben függ a `budget.xlsx`-től.
 1. Töltsd ki a `config.xlsx` fájlt, ez tartalmazza a weboldal beállításait és szövegeit.
 1. Ellenőrizd, hogy az alábbiakban bemutatott XLSX fájlok mind jelen vannak-e az `input` mappában, és mindegyiknek megfelelő-e a formátuma.
-1. A projekt mappájában futtasd le a `pnpm prepare` parancsot, ez az `input` mappában levő fájlokban rejlő adatokat átalakítja a vizualizációnak megfelelő formátumra. A generált adatfájlok az `src/data` mappába kerülnek, a weboldal fejlesztésekor és generálásakor innen lesznek kiolvasva.
-1. A projekt mappájában indítsd el a `pnpm dev` parancsot, mely egy lokális webszervert nyit. Ezután a http://localhost:8080/ címen meg tudod tekinteni a weboldal előnézetét. Ahogy módosítod a fájlokat, az előnézet is frissülni fog. A programot a `Ctrl+C` kombinációval lehet leállítani.
-1. A weboldal legenerálásához használd a `pnpm build` parancsot. (Ez lefuttatja a `prepare` szkriptet is.) A kész weboldal a `dist` mappába kerül, ennek tartalmát kell a webszervereddel hosztolnod.
+1. A projekt mappájában futtasd le az `npm run prepare` parancsot, ez az `input` mappában levő fájlokban rejlő adatokat átalakítja a vizualizációnak megfelelő formátumra. A generált adatfájlok az `src/data` mappába kerülnek, a weboldal fejlesztésekor és generálásakor innen lesznek kiolvasva.
+1. A projekt mappájában indítsd el az `npm run dev` parancsot, mely egy lokális webszervert nyit. Ezután a http://localhost:8080/ címen meg tudod tekinteni a weboldal előnézetét. Ahogy módosítod a fájlokat, az előnézet is frissülni fog. A programot a `Ctrl+C` kombinációval lehet leállítani.
+1. A weboldal legenerálásához használd az `npm run build` parancsot. (Ez lefuttatja a `prepare` szkriptet is.) A kész weboldal a `dist` mappába kerül, ennek tartalmát kell a webszervereddel hosztolnod.
 1. A kereső naplózás funkciójához szükség van telepített PHP interpreterre is, valamint a következő parancs lefuttatására a hosztolt mappában: `touch search.log && sudo chown www-data:www-data search.log`. A `search.log` fájlt érdemes publikusan elérhetetlenné tenni (ld. `static/.htaccess`). Ha erre a naplózó funkcióra nincs szükség, a `track-search.php` fájlt ajánlott törölni a webszerverről.
 
 ## Beüzemelés almappába
@@ -40,13 +40,13 @@ A beüzemelés lépései:
 Ha az oldalt egy meglévő honlap aloldalaként szeretnénk hosztolni, akkor a genenárálást ennek megfelelően kell megtenni. Az alábbi parancsban a `KOKO_DIR` változó értékének a kívánt almappa nevét kell megadni:
 
 ```bash
-export KOKO_DIR=kv; NUXT_APP_BASE_URL=/$KOKO_DIR/ pnpm build; mv dist temp; mkdir -p dist; mv temp dist/$KOKO_DIR
+export KOKO_DIR=kv; NUXT_APP_BASE_URL=/$KOKO_DIR/ npm run build; mv dist temp; mkdir -p dist; mv temp dist/$KOKO_DIR
 ```
 
 Ekkor a generált weboldal a `dist/$KOKO_DIR`-be kerül. Az alábbi paranccsal lehet tesztelni:
 
 ```bash
-pnpx live-server dist --open=$KOKO_DIR
+npx live-server dist --open=$KOKO_DIR
 ```
 
 ## Mappastruktúra
@@ -397,18 +397,18 @@ A `timeseries.kgrOnly` beállítás azt szabályozza, hogy a közgazdasági idő
 Magának a költségvetés site-nak a beüzemelése ezekből a fázisokból áll (ez van fentebb részletesebben):
 
 1. A forráskódban cserélni/módosítani kell az Excel és képfájlokat.
-2. Le kell generálni a site-ot a forráskódból (`pnpm build`).
+2. Le kell generálni a site-ot a forráskódból (`npm run build`).
 3. Ezután a `dist` mappában egy statikus weboldal fájljai lesznek, ezt lehet egy webszerverrel (pl. Apache, Nginx) hosztolni.
 
-Az admin modul eme 3 lépés megkönnyítésére szolgál. Ez egy webalkalmazás, ami a forráskód mappájában fut, így le tudja cserélni a fájlokat, és meg tudja hívni az `pnpm build` parancsot. Mindezen műveletekhez pedig egy webes felületet biztosít.
+Az admin modul eme 3 lépés megkönnyítésére szolgál. Ez egy webalkalmazás, ami a forráskód mappájában fut, így le tudja cserélni a fájlokat, és meg tudja hívni az `npm run build` parancsot. Mindezen műveletekhez pedig egy webes felületet biztosít.
 
 Admin beüzemelés lépései részletesen:
 
-1. Telepíts Node.js-t és PNPM-et, ezek adják az alapvető környezetet a projekthez.
-2. Lépj be az `admin` mappába.
-3. Futtasd le a `pnpm install` parancsot.
-4. Készíts másolatot az `.env.example` fájlról `.env` néven.
-5. Szerkeszd az `.env` fájlt, hogy beállítsd az admin felületet:
+1. Telepítsd a Node.js 22-es verzióját, amely az npm csomagkezelőt is tartalmazza.
+2. Lépj be a projekt főmappájába.
+3. Futtasd le az `npm install` parancsot. Ez a főoldal és az admin függőségeit is telepíti.
+4. Készíts másolatot az `admin/.env.example` fájlról `admin/.env` néven.
+5. Szerkeszd az `admin/.env` fájlt, hogy beállítsd az admin felületet:
     - `PORT=8081` - a port száma, amin a webes felület elérhető lesz
     - `ADMIN_USER=admin` - ezzel a felhasználónévvel lehet majd elérni az admin felületet
     - `ADMIN_PASS=admin` - ezzel a jelszóval lehet majd elérni az admin felületet
@@ -417,9 +417,8 @@ Admin beüzemelés lépései részletesen:
     - `PUBLIC_URL=https://pelda.koltsegvetes.hu/` - az admin felület jobb felső sarkában levő zöld gomb ide fog linkelni
     - `DEPLOY_CMD=` - itt lehet megadni azt a parancsot, ami a `dist` mappát (vagyis a legenerált költségvetés site-ot) a webszerverre kiteszi (pl. ez lehet akár másolás, feltöltés, de akár lehet üresen is hagyni, ha a költségvetést ugyanazon a gépen levő webszerverrel hosztolod és erre a mappára állítottad be a root-ot)
     - `SITE_BASE_URL` - ezzel lehet a generált site base url-jét (`https://example.hu/` utáni rész, pl.: `/koltsegvetes/`) beállítani
-6. Lépj vissza egy mappaszinttel fejlebb, a projekt mappájába.
-7. Futtasd le a `pnpm build:admin` parancsot.
-8. Az admin felület az `pnpm admin` paranccsal indítható el, és böngészőben pl. a http://localhost:8081/ címen lesz elérhető.
+6. Futtasd le az `npm run build:admin` parancsot.
+7. Az admin felület az `npm run admin` paranccsal indítható el, és böngészőben pl. a http://localhost:8081/ címen lesz elérhető.
 
 Ahhoz, hogy az admin felület publikusan is elérhető legyen, az alábbiakra van szükség:
 
