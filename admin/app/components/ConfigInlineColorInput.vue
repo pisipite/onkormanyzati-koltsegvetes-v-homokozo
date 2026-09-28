@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const props = defineProps<{
 	label: string;
+	labelClass?: string;
 	modelValue: string;
 }>();
 
@@ -24,7 +25,7 @@ const pickerValue = computed(() => {
 
 <template>
 	<div class="flex min-w-0 items-center gap-2">
-		<span class="text-muted-foreground shrink-0 text-xs">{{ label }}</span>
+		<span :class="['text-muted-foreground shrink-0 text-xs', labelClass]">{{ label }}</span>
 		<Input
 			:aria-label="`${label} színválasztó`"
 			class="h-8 w-10 shrink-0 p-1"
@@ -34,7 +35,7 @@ const pickerValue = computed(() => {
 		/>
 		<Input
 			:aria-label="`${label} CSS-szín`"
-			class="h-8 min-w-24 max-w-32 font-mono text-xs"
+			class="h-8 w-[5.5rem] min-w-0 font-mono text-xs"
 			:model-value="modelValue"
 			placeholder="#000000"
 			@update:model-value="emit('update:modelValue', String($event))"

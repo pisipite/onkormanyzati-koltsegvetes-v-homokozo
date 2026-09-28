@@ -33,6 +33,22 @@ function updateSharedColor(value: string) {
 	if (props.economicCode) emit('updateEconomicColor', value);
 }
 
+function updateBalanceColor(value: string) {
+	if (hasBothCodes.value && !useSeparateColors.value) {
+		updateSharedColor(value);
+		return;
+	}
+	emit('updateBalanceColor', value);
+}
+
+function updateEconomicColor(value: string) {
+	if (hasBothCodes.value && !useSeparateColors.value) {
+		updateSharedColor(value);
+		return;
+	}
+	emit('updateEconomicColor', value);
+}
+
 function setUseSeparateColors(value: boolean) {
 	useSeparateColors.value = value;
 	if (value || !hasBothCodes.value) return;
@@ -42,37 +58,45 @@ function setUseSeparateColors(value: boolean) {
 </script>
 
 <template>
-	<div class="grid gap-3 border-t px-3 py-3 first:border-t-0 lg:grid-cols-[7rem_8rem_minmax(0,1fr)_6rem] lg:items-center">
+	<div class="grid gap-2 border-t px-3 py-2.5 first:border-t-0 lg:grid-cols-[3.75rem_4.5rem_minmax(8rem,1fr)_minmax(8rem,1fr)_3.5rem] lg:items-center">
 		<div class="flex items-center justify-between gap-3 lg:block">
 			<span class="text-muted-foreground text-xs lg:hidden">Mérlegkód</span>
 			<code class="text-sm">{{ balanceCode || 'nincs' }}</code>
 		</div>
 		<div class="flex items-center justify-between gap-3 lg:block">
-			<span class="text-muted-foreground text-xs lg:hidden">Közgazdasági kód</span>
+			<span class="text-muted-foreground text-xs lg:hidden">Közg. kód</span>
 			<code class="text-sm">{{ economicCode || 'nincs' }}</code>
 		</div>
 
-		<div
-			v-if="hasBothCodes && useSeparateColors"
-			class="flex flex-wrap gap-x-4 gap-y-2"
-		>
+		<div v-if="balanceCode">
 			<ConfigInlineColorInput
 				label="Mérleg"
+				label-class="lg:sr-only"
 				:model-value="balanceColor"
-				@update:model-value="emit('updateBalanceColor', $event)"
-			/>
-			<ConfigInlineColorInput
-				label="Közgazdasági"
-				:model-value="economicColor"
-				@update:model-value="emit('updateEconomicColor', $event)"
+				@update:model-value="updateBalanceColor"
 			/>
 		</div>
-		<ConfigInlineColorInput
+		<div
 			v-else
-			:label="hasBothCodes ? 'Közös' : balanceCode ? 'Mérleg' : 'Közgazdasági'"
-			:model-value="sharedColor"
-			@update:model-value="updateSharedColor"
-		/>
+			class="text-muted-foreground text-xs"
+		>
+			<span class="lg:hidden">Mérleg: </span>nincs
+		</div>
+
+		<div v-if="economicCode">
+			<ConfigInlineColorInput
+				label="Közg."
+				label-class="lg:sr-only"
+				:model-value="economicColor"
+				@update:model-value="updateEconomicColor"
+			/>
+		</div>
+		<div
+			v-else
+			class="text-muted-foreground text-xs"
+		>
+			<span class="lg:hidden">Közg.: </span>nincs
+		</div>
 
 		<div
 			v-if="hasBothCodes"
@@ -94,5 +118,6 @@ function setUseSeparateColors(value: boolean) {
 				/>
 			</button>
 		</div>
+		<div v-else />
 	</div>
 </template>

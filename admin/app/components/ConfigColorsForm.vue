@@ -309,10 +309,11 @@ function addCodePair(kind: EconomicKind) {
 			>
 				<h4 class="text-sm font-semibold">{{ codeSettings[kind].description }}</h4>
 				<div class="bg-background mt-2 border-y">
-					<div class="text-muted-foreground hidden grid-cols-[7rem_8rem_minmax(0,1fr)_6rem] gap-3 bg-gray-50 px-3 py-2 text-xs font-medium lg:grid">
+					<div class="text-muted-foreground hidden grid-cols-[3.75rem_4.5rem_minmax(8rem,1fr)_minmax(8rem,1fr)_3.5rem] gap-2 bg-gray-50 px-3 py-2 text-xs font-medium lg:grid">
 						<span>Mérlegkód</span>
-						<span>Közgazdasági kód</span>
-						<span>Szín</span>
+						<span>Közg. kód</span>
+						<span>Mérleg</span>
+						<span>Közg.</span>
 						<span class="text-right">Eltérő</span>
 					</div>
 					<ConfigEconomicColorRow
@@ -331,7 +332,7 @@ function addCodePair(kind: EconomicKind) {
 						@submit.prevent="addCodePair(kind)"
 					>
 						<div class="mb-2 text-xs font-medium">Új kódpár</div>
-						<div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-[7rem_8rem_minmax(15rem,1fr)_auto] xl:items-center">
+						<div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-[5rem_5rem_minmax(12rem,1fr)_auto] xl:items-center">
 							<label class="grid gap-1">
 								<span class="text-muted-foreground text-xs xl:sr-only">Mérlegkód</span>
 								<Input
@@ -341,7 +342,7 @@ function addCodePair(kind: EconomicKind) {
 								/>
 							</label>
 							<label class="grid gap-1">
-								<span class="text-muted-foreground text-xs xl:sr-only">Közgazdasági kód</span>
+								<span class="text-muted-foreground text-xs xl:sr-only">Közg. kód</span>
 								<Input
 									v-model="newCodeDrafts[kind].economicCode"
 									class="h-8 font-mono text-xs"

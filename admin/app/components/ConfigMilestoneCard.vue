@@ -203,15 +203,15 @@ function updateCommaSeparatedValue(header: string, values: string[]) {
 				</div>
 			</div>
 
-			<label class="grid min-w-0 gap-1">
+			<div class="grid min-w-0 gap-1">
 				<span class="text-sm font-medium">Leírás</span>
-				<Textarea
-					class="min-h-24"
+				<MarkdownTextarea
 					:model-value="row.values.descriptionInMarkdown"
 					placeholder="Kártya szövege markdown formátumban"
+					textarea-class="min-h-24"
 					@update:model-value="updateValue('descriptionInMarkdown', String($event))"
 				/>
-			</label>
+			</div>
 		</div>
 
 		<div
